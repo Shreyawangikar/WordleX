@@ -1,3 +1,103 @@
+/* Entropy tooltip enhanced styles */
+.entropy-tooltip {
+  background: white;
+  border-radius: 14px;
+  padding: 12px;
+  font-size: 13px;
+  width: 240px;
+
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.04),
+    0 14px 40px rgba(0,0,0,0.28);
+
+  animation: glowPulse 2.8s ease-in-out infinite;
+}
+
+body.dark .entropy-tooltip {
+  background: #1f1f1f;
+}
+
+.entropy-arrow {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  transform: rotate(45deg);
+}
+
+.entropy-body {
+  position: relative;
+  z-index: 2;
+}
+
+.entropy-score {
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.entropy-partitions {
+  margin-top: 6px;
+  font-family: monospace;
+}
+
+@keyframes glowPulse {
+  0% {
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,0.04),
+      0 10px 30px rgba(74,222,128,0.25);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,0.04),
+      0 16px 44px rgba(74,222,128,0.4);
+  }
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,0.04),
+      0 10px 30px rgba(74,222,128,0.25);
+  }
+}
+/* Suggestion hover/clickable styles */
+.suggestion-hover {
+  position: relative;
+  display: inline-block;
+}
+
+.suggestion-word.clickable {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.suggestion-word.clickable:hover {
+  text-decoration: underline;
+}
+/* Clickable suggestion styles */
+.suggestion-word.clickable {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.suggestion-word.clickable:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+.suggestion-word {
+  touch-action: manipulation;
+}
+/* Modal close button styling */
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+
+  border: none;
+  background: transparent;
+
+  font-size: 20px;
+  cursor: pointer;
+  color: inherit;
+}
 /* ---------- HELP / GUIDE BUTTON ---------- */
 
 .guide-button {
@@ -91,24 +191,7 @@ body {
   background: white;
   color: black;
 }
-/* Entropy Tooltip styles */
-.entropy-tooltip {
-  position: absolute;
-  background: var(--tooltip-bg, white);
-  color: black;
-  border-radius: 10px;
-  padding: 10px;
-  font-size: 13px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-  width: 220px;
-  z-index: 50;
-}
-
-body.dark .entropy-tooltip {
-  background: #222;
-  color: white;
-}
-
+/* Entropy tooltip hint text */
 .entropy-tooltip .hint {
   font-size: 11px;
   opacity: 0.7;

@@ -1,66 +1,107 @@
-
+import { motion } from "framer-motion";
 import {
   useFloating,
   offset,
   flip,
   shift,
+  arrow,
   autoUpdate,
-} from "@floating-ui/react";
-import { motion } from "framer-motion";
-import { useEffect } from "react";
+} from "@floating-ui/react-dom";
+import { useState } from "react";
+
+type Props = {
+  reference: HTMLElement;
+  word: string;
+  score: number;
+  partitions: Map<string, number>;
+};
 
 export function EntropyTooltip({
   reference,
   word,
   score,
   partitions,
-}: {
-  reference: HTMLElement | null;
-  word: string;
-  score: number;
-  partitions: number[];
-}) {
-  const { refs, floatingStyles, update } = useFloating({
-    placement: "right",
-    middleware: [offset(8), flip(), shift()],
+}: Props) {
+  const [arrowEl, setArrowEl] = useState<HTMLDivElement | null>(null);
+
+  const [floatingEl, setFloatingEl] = useState<HTMLDivElement | null>(null);
+
+  const {
+    x,
+    y,
+    strategy,
+    middlewareData,
+    placement,
+  } = useFloating({
+    placement: "top",
+    middleware: [
+      offset(10),
+      flip(),
+      shift({ padding: 8 }),
+      arrow({ element: arrowEl }),
+    ],
+    whileElementsMounted: autoUpdate,
+    elements: {
+      reference,
+      floating: floatingEl,
+    },
   });
 
-  useEffect(() => {
-    if (reference) refs.setReference(reference);
-  }, [reference]);
+  const staticSide = placement.split("-")[0];
 
-  useEffect(() => {
-    if (!refs.reference.current || !refs.floating.current)
-      return;
-
-    return autoUpdate(
-      refs.reference.current,
-      refs.floating.current,
-      update
-    );
-  }, [refs.reference, refs.floating, update]);
+  const topPartitions = [...partitions.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
 
   return (
     <motion.div
-      ref={refs.setFloating}
-      style={{ ...floatingStyles }}
-      initial={{ opacity: 0, scale: 0.96 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.96 }}
+      ref={setFloatingEl}
       className="entropy-tooltip"
+      initial={{ opacity: 0, scale: 0.9, y: 6 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9, y: 6 }}
+      transition={{ type: "spring", stiffness: 260, damping: 18 }}
+      style={{
+        position: strategy,
+        top: y ?? 0,
+        left: x ?? 0,
+      }}
     >
-      <strong>{word}</strong>
+      {/* ARROW */}
+      <div
+        ref={setArrowEl}
+        className="entropy-arrow"
+        style={{
+          left: middlewareData.arrow?.x,
+          top: middlewareData.arrow?.y,
+          right: undefined,
+          bottom: undefined,
+          ...(staticSide === "top" && { bottom: "-6px" }),
+          ...(staticSide === "bottom" && { top: "-6px" }),
+        }}
+      />
 
-      <div>Info gain: {score.toFixed(2)} bits</div>
+      <div className="entropy-body">
+        <b>{word}</b>
 
-      <div className="parts">
-        {partitions.map((p, i) => (
-          <div key={i}>Group {i + 1}: {p}</div>
-        ))}
-      </div>
+        <div className="entropy-score">
+          Expected info gain: {score.toFixed(2)} bits
+        </div>
 
-      <div className="hint">
-        Higher entropy splits candidates more evenly.
+        <hr />
+
+        <div className="entropy-partitions">
+          Top partitions:
+          {topPartitions.map(([pat, count]) => (
+            <div key={pat}>
+              {pat}: {count}
+            </div>
+          ))}
+        </div>
+
+        <div className="hint">
+          Higher entropy = better next guess.
+        </div>
       </div>
     </motion.div>
   );

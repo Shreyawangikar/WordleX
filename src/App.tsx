@@ -15,6 +15,9 @@ import { secondsUntilTomorrow, formatTime } from "./game/countdown";
 
 import type { Feedback, LetterResult } from "./solver/wordleSolver";
 
+const isTouchDevice = () =>
+  window.matchMedia("(pointer: coarse)").matches;
+
 // --- STATS HELPERS (inlined for compatibility) ---
 type Stats = {
   gamesPlayed: number;
@@ -66,10 +69,26 @@ function App() {
   const [hoveredEl, setHoveredEl] = useState<HTMLElement | null>(null);
   const [hoveredWord, setHoveredWord] = useState<string | null>(null);
 
+
+  // Add ESC key closes modal effect (must be after setShowWinModal is declared)
+
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [remaining, setRemaining] = useState<string[]>([]);
   const [showWinModal, setShowWinModal] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(secondsUntilTomorrow());
+
+  // Add ESC key closes modal effect (must be after setShowWinModal is declared)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowStats(false);
+        setShowGuide(false);
+        setShowWinModal(false);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const [stats, setStats] = useState(() => loadStats());
 
@@ -208,6 +227,7 @@ function App() {
     return () => window.removeEventListener("keydown", handler);
   }, [handleKeyPress, confirmRow, rows]);
 
+
   // Tile click -> cycle color
   const handleTileClick = (rowIdx: number, colIdx: number) => {
     setRows((prev) =>
@@ -229,6 +249,8 @@ function App() {
     );
   };
 
+  // Suggestion click handler no longer needed with tooltip-only interaction
+
   const resetGame = () => {
     setRows([]);
     setFeedbacks([]);
@@ -249,10 +271,28 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (secondsLeft === 0) {
+    if (secondsLeft !== 0) return;
+    const id = window.setTimeout(() => {
       resetGame();
-    }
+    }, 0);
+    return () => window.clearTimeout(id);
   }, [secondsLeft]);
+
+  useEffect(() => {
+    if (!hoveredWord) return;
+
+    const handler = (e: PointerEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (!target.closest(".entropy-tooltip")) {
+        setHoveredWord(null);
+        setHoveredEl(null);
+      }
+    };
+
+    window.addEventListener("pointerdown", handler);
+    return () => window.removeEventListener("pointerdown", handler);
+  }, [hoveredWord]);
 
   return (
   <div className="app">
@@ -382,19 +422,40 @@ function App() {
                     justifyContent: "space-between",
                   }}
                 >
-                  <div
-                    onClick={(e) => {
-                      if (hoveredWord === s.word) {
+
+                  <div>
+                    <span
+                      className="suggestion-word clickable"
+                      tabIndex={0}
+                      onMouseEnter={(e) => {
+                        if (isTouchDevice()) return;
+                        setHoveredWord(s.word);
+                        setHoveredEl(e.currentTarget as HTMLElement);
+                      }}
+                      onMouseLeave={() => {
+                        if (isTouchDevice()) return;
                         setHoveredWord(null);
                         setHoveredEl(null);
-                      } else {
+                      }}
+                      onFocus={(e) => {
                         setHoveredWord(s.word);
-                        setHoveredEl(e.currentTarget);
-                      }
-                    }}
-                    style={{ position: "relative" }}
-                  >
-                    <span className="suggestion-word">
+                        setHoveredEl(e.currentTarget as HTMLElement);
+                      }}
+                      onBlur={() => {
+                        setHoveredWord(null);
+                        setHoveredEl(null);
+                      }}
+                      onClick={(e) => {
+                        if (!isTouchDevice()) return;
+                        if (hoveredWord === s.word) {
+                          setHoveredWord(null);
+                          setHoveredEl(null);
+                        } else {
+                          setHoveredWord(s.word);
+                          setHoveredEl(e.currentTarget as HTMLElement);
+                        }
+                      }}
+                    >
                       {s.word}
                     </span>
 
@@ -519,26 +580,25 @@ function App() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          onClick={() => setShowStats(false)}
         >
           <motion.div
             className="modal"
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0.8 }}
+            initial={{ scale: 0.85, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.9 }}
+            onClick={(e) => e.stopPropagation()}
           >
+            {/* CLOSE BUTTON */}
             <button
-              style={{
-                position: "absolute",
-                top: 12,
-                right: 12,
-                background: "transparent",
-                fontSize: 18,
-              }}
+              className="modal-close"
               onClick={() => setShowStats(false)}
             >
               ✕
             </button>
-            <h2>📊 Statistics</h2>
+
+            <h2>Statistics</h2>
+
             <div className="stats-panel">
               <div>
                 <b>Played</b>
@@ -553,14 +613,18 @@ function App() {
                 </div>
               </div>
               <div>
-                <b>Current</b>
+                <b>Current Streak</b>
                 <div>{stats.currentStreak}</div>
               </div>
               <div>
-                <b>Max</b>
+                <b>Max Streak</b>
                 <div>{stats.maxStreak}</div>
               </div>
             </div>
+
+            <p className="next-countdown">
+              Next puzzle in <b>{formatTime(secondsLeft)}</b>
+            </p>
           </motion.div>
         </motion.div>
       )}

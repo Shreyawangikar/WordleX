@@ -1,11 +1,11 @@
 // src/solver/entropy.ts
 
 import { scoreGuess, getFeedbackPattern } from "./wordleSolver";
-// Return the top 3 partition sizes for a guess
+// Return partitions as a map from feedback pattern -> count
 export function getPartitions(
   guess: string,
   candidates: string[]
-): number[] {
+): Map<string, number> {
   const map = new Map<string, number>();
 
   for (const word of candidates) {
@@ -13,7 +13,7 @@ export function getPartitions(
     map.set(pattern, (map.get(pattern) ?? 0) + 1);
   }
 
-  return [...map.values()].sort((a, b) => b - a).slice(0, 3);
+  return map;
 }
 import type { LetterResult } from "./wordleSolver";
 
