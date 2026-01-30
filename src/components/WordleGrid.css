@@ -1,0 +1,72 @@
+.grid {
+  display: grid;
+  gap: 8px;
+  margin: 24px 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(5, 48px);
+  gap: 6px;
+}
+
+.tile {
+  width: 48px;
+  height: 48px;
+  perspective: 600px;
+}
+
+.tile-inner {
+  width: 100%;
+  height: 100%;
+  border: 2px solid #d3d6da;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 22px;
+  text-transform: uppercase;
+  background: white;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+/* Flip animation */
+.tile.green .tile-inner,
+.tile.yellow .tile-inner,
+.tile.gray .tile-inner {
+  animation: flip 0.6s ease forwards;
+}
+
+@keyframes flip {
+  0% {
+    transform: rotateX(0deg);
+  }
+  50% {
+    transform: rotateX(90deg);
+    background: white;
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
+/* Colors */
+
+.tile.green .tile-inner {
+  background: #6aaa64;
+  border-color: #6aaa64;
+  color: white;
+}
+
+.tile.yellow .tile-inner {
+  background: #c9b458;
+  border-color: #c9b458;
+  color: white;
+}
+
+.tile.gray .tile-inner {
+  background: #787c7e;
+  border-color: #787c7e;
+  color: white;
+}
