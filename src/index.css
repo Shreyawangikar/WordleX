@@ -1,3 +1,95 @@
+/* ---------- HELP / GUIDE BUTTON ---------- */
+
+.guide-button {
+  position: fixed;
+  top: 16px;
+  right: 84px; /* sits just left of theme toggle */
+
+  width: 32px;
+  height: 32px;
+
+  border-radius: 50%;
+  border: 2px solid #222;
+
+  background: transparent;
+
+  font-size: 22px;
+  font-weight: 700;
+  
+
+  font-family: system-ui, sans-serif;
+
+  cursor: pointer;
+  z-index: 200;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  line-height: 1; /* 👈 fixes vertical offset */
+
+  padding: 0;
+
+  color: rgb(0, 0, 0) !important;
+}
+
+body.dark .guide-button {
+  border-color: white;
+  color: white;
+}
+
+
+body:not(.dark) .suggestion-word {
+  color: black;
+}
+
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  max-width: 1000px;
+  width: 100%;
+}
+
+.left-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.right-panel {
+  background: rgba(0,0,0,0.03);
+  padding: 14px;
+  border-radius: 12px;
+}
+
+body.dark .right-panel {
+  background: rgba(255,255,255,0.05);
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  font-size: 20px;
+  cursor: pointer;
+  border: none;
+  background: white;
+}
+
+body.dark .theme-toggle {
+  background: #222;
+  color: white;
+}
+
+body {
+  background: white;
+  color: black;
+}
 /* Entropy Tooltip styles */
 .entropy-tooltip {
   position: absolute;
@@ -27,8 +119,7 @@ body.dark .entropy-tooltip {
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -45,12 +136,132 @@ a:hover {
   color: #535bf2;
 }
 
+
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
+  background: white;
+}
+
+.app {
   min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: flex-start !important;
+
+  padding-top: 0px;   
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+
+
+.main-layout {
+  margin-top: 0px;
+}
+body.dark {
+  background: #0f1115;
+  color: white;
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  font-size: 20px;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+}
+/* ---------- THEME TOGGLE SWITCH ---------- */
+
+.theme-switch {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  cursor: pointer;
+  z-index: 200;
+}
+
+.switch-track {
+  width: 45px;
+  height: 34px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  transition: background 0.3s ease;
+}
+
+.theme-switch.dark .switch-track {
+  background: #1f2933;
+}
+
+.switch-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 28px;
+  height: 28px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+.theme-switch.dark .switch-thumb {
+  transform: translateX(30px);
+  background: #111;
+}
+
+/* icons */
+
+.switch-track .icon {
+  font-size: 15px;
+  opacity: 0.65;
+  z-index: 2;
+}
+
+.theme-switch.dark .sun {
+  opacity: 0.3;
+}
+
+.theme-switch:not(.dark) .moon {
+  opacity: 0.3;
+}
+
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: white;
+  color: black;
+  border-radius: 14px;
+  padding: 32px 24px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  min-width: 280px;
+  max-width: 90vw;
+  text-align: center;
+}
+
+body.dark .modal {
+  background: #222;
+  color: white;
 }
 
 h1 {
@@ -67,10 +278,12 @@ button {
   font-family: inherit;
   background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: border-color 0.25s, transform 0.15s ease, box-shadow 0.15s ease;
 }
 button:hover {
   border-color: #646cff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 button:focus,
 button:focus-visible {
@@ -104,10 +317,7 @@ body.dark button {
   }
 }
 
-.app {
-  max-width: 720px;
-  margin: auto;
-}
+
 
 @media (max-width: 600px) {
   .app {
@@ -139,4 +349,52 @@ body.dark button {
   button {
     background-color: #f9f9f9;
   }
+}
+#root {
+  min-height: 100vh;
+  display: block !important;
+}
+h1 {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+.right-panel h3:first-child {
+  margin-top: 0px;
+}
+.right-panel {
+  margin-top: 16px;   
+}
+
+/* ---------- TITLE WORDLE COLORS ---------- */
+
+.title {
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin: 6px 0 14px;
+  user-select: none;
+}
+
+.title span {
+  display: inline-block;
+}
+
+/* Wordle colors */
+
+.t-green {
+  color: #16a34a;
+}
+
+.t-yellow {
+  color: #eab308;
+}
+
+.t-gray {
+  color: #9ca3af;
+}
+
+/* Dark mode tuning */
+
+body.dark .t-gray {
+  color: #6b7280;
 }
