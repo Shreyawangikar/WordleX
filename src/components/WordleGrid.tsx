@@ -26,13 +26,15 @@ export function WordleGrid({
               const status = row?.result[colIdx];
 
               const editable = row?.editable;
+              const isTypingRow =
+                row && !row.editable && (row.result?.length ?? 0) === 0 && row.word.length > 0;
 
               return (
                 <div
                   key={colIdx}
                   className={`tile ${status ?? ""} ${
                     editable ? "editable" : ""
-                  }`}
+                  } ${isTypingRow ? "typing" : ""}`}
                   style={{
                     animationDelay: `${colIdx * 120}ms`,
                   }}

@@ -75,3 +75,9 @@
 .tile.editable {
   cursor: pointer;
 }
+
+/* Currently-typing row */
+.tile.typing .tile-inner {
+  border-color: #4ade80;      /* green outline */
+  background: #ecfdf3;        /* very light green background */
+}

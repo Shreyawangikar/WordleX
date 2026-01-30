@@ -249,7 +249,12 @@ function App() {
     );
   };
 
-  // Suggestion click handler no longer needed with tooltip-only interaction
+  // Suggestion click handler: auto-type suggestion into current guess
+  const applySuggestion = (word: string) => {
+    // Don't overwrite a row waiting for feedback
+    if (rows.some((r) => r.editable)) return;
+    setCurrentGuess(word);
+  };
 
   const resetGame = () => {
     setRows([]);
@@ -308,18 +313,22 @@ function App() {
         <span className="t-yellow">e</span>
         <span className="t-green">X</span>
       </h1>
-      <div className="countdown">
+      <div
+        className="countdown"
+        title={`Next puzzle in ${formatTime(secondsLeft)}`}
+      >
         ⏳ {formatTime(secondsLeft)}
       </div>
     </div>
 
 
     <button
-  className="guide-button"
-  onClick={() => setShowGuide(true)}
->
-  ❔
-</button>
+      className="guide-button"
+      onClick={() => setShowGuide(true)}
+      title="How to use WordleX"
+    >
+      ❔
+    </button>
 <button
   className="stats-button"
   onClick={() => {
@@ -446,6 +455,10 @@ function App() {
                         setHoveredEl(null);
                       }}
                       onClick={(e) => {
+                        // Always type the suggestion into the grid
+                        applySuggestion(s.word);
+
+                        // On touch devices, also toggle the tooltip
                         if (!isTouchDevice()) return;
                         if (hoveredWord === s.word) {
                           setHoveredWord(null);
