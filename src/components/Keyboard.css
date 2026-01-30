@@ -36,3 +36,15 @@
   background: #787c7e;
   color: white;
 }
+.key {
+  border: none;
+  cursor: pointer;
+}
+
+.key:active {
+  transform: scale(0.95);
+}
+
+.key.wide {
+  min-width: 64px;
+}

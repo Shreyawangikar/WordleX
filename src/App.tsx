@@ -9,6 +9,8 @@ import type { Feedback, LetterResult } from "./solver/wordleSolver";
 import { filterCandidates } from "./solver/wordleSolver";
 
 function App() {
+  const [currentGuess, setCurrentGuess] = useState("");
+
   const [letterStates, setLetterStates] = useState<
   Record<string, LetterResult>
 >({});
@@ -33,27 +35,29 @@ setSuggestions(rankGuesses(possible, possible, 10));
   }, []);
 
   const handleAddGuess = (guess: string, result: string) => {
-    setRows((r) => [...r, { word: guess, result: parsed }]);
-
   const parsed: LetterResult[] = result.split("").map((c) => {
     if (c === "g") return "green";
     if (c === "y") return "yellow";
     return "gray";
-    setLetterStates((prev) => {
-  const next = { ...prev };
-
-  parsed.forEach((res, i) => {
-    const ch = guess[i];
-
-    if (next[ch] === "green") return;
-    if (next[ch] === "yellow" && res === "gray") return;
-
-    next[ch] = res;
   });
 
-  return next;
-});
+  // Update grid rows
+  setRows((r) => [...r, { word: guess, result: parsed }]);
 
+  // Update keyboard letter states
+  setLetterStates((prev) => {
+    const next = { ...prev };
+
+    parsed.forEach((res, i) => {
+      const ch = guess[i];
+
+      if (next[ch] === "green") return;
+      if (next[ch] === "yellow" && res === "gray") return;
+
+      next[ch] = res;
+    });
+
+    return next;
   });
 
   const fb: Feedback = {
@@ -72,14 +76,44 @@ setSuggestions(rankGuesses(possible, possible, 10));
 };
 
 
+const handleKeyPress = (key: string) => {
+  if (rows.length >= 6) return;
+
+  if (key === "back") {
+    setCurrentGuess((g) => g.slice(0, -1));
+    return;
+  }
+
+  if (key === "enter") {
+    if (currentGuess.length !== 5) return;
+
+    handleAddGuess(currentGuess, "xxxxx");
+    setCurrentGuess("");
+    return;
+  }
+
+  if (/^[a-z]$/.test(key) && currentGuess.length < 5) {
+    setCurrentGuess((g) => g + key);
+  }
+};
+
   return (
     <div style={{ padding: 24 }}>
       <h1>WordleX Solver</h1>
-      <WordleGrid rows={rows} />
+      <WordleGrid
+  rows={[
+    ...rows,
+    ...(rows.length < 6 && currentGuess
+      ? [{ word: currentGuess, result: [] as LetterResult[] }]
+      : []),
+  ]}
+/>
 
-      <Keyboard letterStates={letterStates} />
 
-      <GuessInput onSubmit={handleAddGuess} />
+      <Keyboard letterStates={letterStates} onKeyPress={handleKeyPress} />
+
+
+      {/* <GuessInput onSubmit={handleAddGuess} /> */}
 
       <h3>Remaining words: {remaining.length}</h3>
       
@@ -121,11 +155,7 @@ setSuggestions(rankGuesses(possible, possible, 10));
   ))}
 </ul>
 
-      <ul>
-        {remaining.slice(0, 20).map((w) => (
-          <li key={w}>{w}</li>
-        ))}
-      </ul>
+      
     </div>
   );
 }
