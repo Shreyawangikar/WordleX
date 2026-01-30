@@ -4,9 +4,16 @@ import type { LetterResult } from "../solver/wordleSolver";
 interface Row {
   word: string;
   result: LetterResult[];
+  editable?: boolean;
 }
 
-export function WordleGrid({ rows }: { rows: Row[] }) {
+export function WordleGrid({
+  rows,
+  onTileClick,
+}: {
+  rows: Row[];
+  onTileClick?: (rowIdx: number, colIdx: number) => void;
+}) {
   return (
     <div className="grid">
       {Array.from({ length: 6 }).map((_, rowIdx) => {
@@ -18,13 +25,20 @@ export function WordleGrid({ rows }: { rows: Row[] }) {
               const letter = row?.word[colIdx]?.toUpperCase() ?? "";
               const status = row?.result[colIdx];
 
+              const editable = row?.editable;
+
               return (
                 <div
                   key={colIdx}
-                  className={`tile ${status ?? ""}`}
+                  className={`tile ${status ?? ""} ${
+                    editable ? "editable" : ""
+                  }`}
                   style={{
                     animationDelay: `${colIdx * 120}ms`,
                   }}
+                  onClick={() =>
+                    editable && onTileClick?.(rowIdx, colIdx)
+                  }
                 >
                   <div className="tile-inner">{letter}</div>
                 </div>

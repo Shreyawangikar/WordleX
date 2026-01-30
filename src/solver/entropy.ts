@@ -1,6 +1,20 @@
 // src/solver/entropy.ts
 
-import { scoreGuess } from "./wordleSolver";
+import { scoreGuess, getFeedbackPattern } from "./wordleSolver";
+// Return the top 3 partition sizes for a guess
+export function getPartitions(
+  guess: string,
+  candidates: string[]
+): number[] {
+  const map = new Map<string, number>();
+
+  for (const word of candidates) {
+    const pattern = getFeedbackPattern(guess, word);
+    map.set(pattern, (map.get(pattern) ?? 0) + 1);
+  }
+
+  return [...map.values()].sort((a, b) => b - a).slice(0, 3);
+}
 import type { LetterResult } from "./wordleSolver";
 
 

@@ -1,3 +1,9 @@
+// Get a compact string feedback pattern for a guess/answer pair
+export function getFeedbackPattern(guess: string, answer: string): string {
+  return scoreGuess(guess, answer)
+    .map((c) => c[0])
+    .join("");
+}
 // src/solver/wordleSolver.ts
 
 export type LetterResult = "green" | "yellow" | "gray";
@@ -6,6 +12,7 @@ export interface Feedback {
   guess: string;
   result: LetterResult[];
 }
+
 
 // Compare guess vs answer and return color feedback
 export function scoreGuess(guess: string, answer: string): LetterResult[] {

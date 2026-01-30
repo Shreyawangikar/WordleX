@@ -27,9 +27,11 @@
   font-size: 22px;
   text-transform: uppercase;
   background: white;
+  color: black;          
   transition: transform 0.6s;
   transform-style: preserve-3d;
 }
+
 
 /* Flip animation */
 .tile.green .tile-inner,
@@ -69,4 +71,7 @@
   background: #787c7e;
   border-color: #787c7e;
   color: white;
+}
+.tile.editable {
+  cursor: pointer;
 }

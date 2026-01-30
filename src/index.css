@@ -1,3 +1,26 @@
+/* Entropy Tooltip styles */
+.entropy-tooltip {
+  position: absolute;
+  background: var(--tooltip-bg, white);
+  color: black;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 13px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  width: 220px;
+  z-index: 50;
+}
+
+body.dark .entropy-tooltip {
+  background: #222;
+  color: white;
+}
+
+.entropy-tooltip .hint {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-top: 6px;
+}
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -52,6 +75,57 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+body.dark {
+  background: #111;
+  color: white;
+}
+
+body.dark .tile-inner {
+  border-color: #444;
+}
+
+body.dark button {
+  background: #333;
+  color: white;
+}
+
+.remaining-count {
+  animation: pop 0.4s ease;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.app {
+  max-width: 720px;
+  margin: auto;
+}
+
+@media (max-width: 600px) {
+  .app {
+    padding: 12px;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+
+  .grid {
+    transform: scale(0.9);
+  }
+
+  button {
+    width: 100%;
+    margin-top: 8px;
+  }
 }
 
 @media (prefers-color-scheme: light) {
