@@ -333,6 +333,7 @@ body.dark {
 }
 
 .modal {
+  position: relative;
   background: white;
   color: black;
   border-radius: 14px;
