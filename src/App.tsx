@@ -1,4 +1,5 @@
 import { WordleGrid } from "./components/WordleGrid";
+import { Keyboard } from "./components/Keyboard";
 
 import { rankGuesses } from "./solver/entropy";
 
@@ -8,6 +9,10 @@ import type { Feedback, LetterResult } from "./solver/wordleSolver";
 import { filterCandidates } from "./solver/wordleSolver";
 
 function App() {
+  const [letterStates, setLetterStates] = useState<
+  Record<string, LetterResult>
+>({});
+
   const [rows, setRows] = useState<
   { word: string; result: LetterResult[] }[]
 >([]);
@@ -34,6 +39,21 @@ setSuggestions(rankGuesses(possible, possible, 10));
     if (c === "g") return "green";
     if (c === "y") return "yellow";
     return "gray";
+    setLetterStates((prev) => {
+  const next = { ...prev };
+
+  parsed.forEach((res, i) => {
+    const ch = guess[i];
+
+    if (next[ch] === "green") return;
+    if (next[ch] === "yellow" && res === "gray") return;
+
+    next[ch] = res;
+  });
+
+  return next;
+});
+
   });
 
   const fb: Feedback = {
@@ -56,6 +76,8 @@ setSuggestions(rankGuesses(possible, possible, 10));
     <div style={{ padding: 24 }}>
       <h1>WordleX Solver</h1>
       <WordleGrid rows={rows} />
+
+      <Keyboard letterStates={letterStates} />
 
       <GuessInput onSubmit={handleAddGuess} />
 
