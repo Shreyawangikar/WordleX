@@ -10,12 +10,43 @@ import { loadAllWords } from "./solver/loadWords";
 import { filterCandidates } from "./solver/wordleSolver";
 import { rankGuesses, getPartitions } from "./solver/entropy";
 import { EntropyTooltip } from "./components/EntropyTooltip";
+import { secondsUntilTomorrow, formatTime } from "./game/countdown";
 
 
 import type { Feedback, LetterResult } from "./solver/wordleSolver";
 
+// --- STATS HELPERS (inlined for compatibility) ---
+type Stats = {
+  gamesPlayed: number;
+  wins: number;
+  currentStreak: number;
+  maxStreak: number;
+  guessDist: number[];
+  lastWinDate: string | null;
+};
+const EMPTY_STATS: Stats = {
+  gamesPlayed: 0,
+  wins: 0,
+  currentStreak: 0,
+  maxStreak: 0,
+  guessDist: [0, 0, 0, 0, 0, 0],
+  lastWinDate: null,
+};
+function loadStats(): Stats {
+  const raw = localStorage.getItem("wordlex-stats");
+  return raw ? JSON.parse(raw) : { ...EMPTY_STATS };
+}
+function saveStats(stats: Stats) {
+  localStorage.setItem("wordlex-stats", JSON.stringify(stats));
+}
+
+import { loginAnon } from "./firebase/firebase";
+
 function App() {
- const [showGuide, setShowGuide] = useState(true);
+ const [showGuide, setShowGuide] = useState(() => {
+  return !localStorage.getItem("seen-guide");
+});
+ const [showStats, setShowStats] = useState(false);
 
 
   const [darkMode, setDarkMode] = useState(false);
@@ -37,8 +68,10 @@ function App() {
 
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [remaining, setRemaining] = useState<string[]>([]);
-  const [hasWon, setHasWon] = useState(false);
   const [showWinModal, setShowWinModal] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(secondsUntilTomorrow());
+
+  const [stats, setStats] = useState(() => loadStats());
 
   // Load word lists
   useEffect(() => {
@@ -47,70 +80,80 @@ function App() {
       setSuggestions(rankGuesses(possible, possible, 10));
     });
   }, []);
- 
 
- 
   useEffect(() => {
     document.body.classList.toggle("dark", darkMode);
   }, [darkMode]);
-  
 
-  const fireConfetti = () => {
+  useEffect(() => {
+    loginAnon();
+  }, []);
+
+  const fireConfetti = useCallback(() => {
     confetti({
       particleCount: 180,
       spread: 90,
       origin: { y: 0.6 },
     });
-  };
+  }, []);
 
-  const confirmRow = () => {
+  const confirmRow = useCallback(() => {
     const row = rows.find((r) => r.editable);
     if (!row) return;
-
     const fb: Feedback = {
       guess: row.word,
       result: row.result,
     };
-
     const newFeedbacks = [...feedbacks, fb];
     setFeedbacks(newFeedbacks);
-
     const filtered = filterCandidates(remaining, newFeedbacks);
     setRemaining(filtered);
-
     const ranked = rankGuesses(filtered, filtered, 10);
     setSuggestions(ranked);
-
-    // Update keyboard coloring
     setLetterStates((prev) => {
       const next = { ...prev };
-
       row.result.forEach((res, i) => {
         const ch = row.word[i];
-
         if (next[ch] === "green") return;
         if (next[ch] === "yellow" && res === "gray") return;
-
         next[ch] = res;
       });
-
       return next;
     });
-
-    // Lock row
     setRows((r) =>
       r.map((rr) =>
         rr.editable ? { ...rr, editable: false } : rr
       )
     );
-
     const isWin = row.result.every((r) => r === "green");
+    const todayKey = new Date().toISOString().slice(0, 10);
     if (isWin) {
-      setHasWon(true);
+      const updated = { ...stats };
+      updated.gamesPlayed += 1;
+      updated.wins += 1;
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      if (stats.lastWinDate === yesterday) {
+        updated.currentStreak += 1;
+      } else {
+        updated.currentStreak = 1;
+      }
+      updated.maxStreak = Math.max(updated.maxStreak, updated.currentStreak);
+      updated.guessDist[rows.length - 1]++;
+      updated.lastWinDate = todayKey;
+      setStats(updated);
+      saveStats(updated);
       setShowWinModal(true);
       fireConfetti();
+    } else if (!isWin && rows.length === 6) {
+      const updated = {
+        ...stats,
+        gamesPlayed: stats.gamesPlayed + 1,
+        currentStreak: 0,
+      };
+      setStats(updated);
+      saveStats(updated);
     }
-  };
+  }, [rows, feedbacks, remaining, stats, setStats, setFeedbacks, setRemaining, setSuggestions, setLetterStates, setRows, setShowWinModal, fireConfetti]);
 
   // Keyboard typing
   const handleKeyPress = useCallback(
@@ -164,7 +207,6 @@ function App() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [handleKeyPress, confirmRow, rows]);
-  
 
   // Tile click -> cycle color
   const handleTileClick = (rowIdx: number, colIdx: number) => {
@@ -192,7 +234,6 @@ function App() {
     setFeedbacks([]);
     setLetterStates({});
     setCurrentGuess("");
-    setHasWon(false);
     setShowWinModal(false);
     loadAllWords().then(({ possible }) => {
       setRemaining(possible);
@@ -200,19 +241,37 @@ function App() {
     });
   };
 
+  useEffect(() => {
+    const id = setInterval(() => {
+      setSecondsLeft(secondsUntilTomorrow());
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (secondsLeft === 0) {
+      resetGame();
+    }
+  }, [secondsLeft]);
+
   return (
   <div className="app">
 
     {/* HEADER */}
-    <h1 className="title">
-  <span className="t-green">W</span>
-  <span className="t-yellow">o</span>
-  <span className="t-gray">r</span>
-  <span className="t-gray">d</span>
-  <span className="t-gray">l</span>
-  <span className="t-yellow">e</span>
-  <span className="t-green">X</span>
-</h1>
+    <div className="header-bar">
+      <h1 className="title">
+        <span className="t-green">W</span>
+        <span className="t-yellow">o</span>
+        <span className="t-gray">r</span>
+        <span className="t-gray">d</span>
+        <span className="t-gray">l</span>
+        <span className="t-yellow">e</span>
+        <span className="t-green">X</span>
+      </h1>
+      <div className="countdown">
+        ⏳ {formatTime(secondsLeft)}
+      </div>
+    </div>
 
 
     <button
@@ -220,6 +279,16 @@ function App() {
   onClick={() => setShowGuide(true)}
 >
   ❔
+</button>
+<button
+  className="stats-button"
+  onClick={() => {
+    setShowStats(true);
+    console.log(showStats); // Debug: should print true when clicked
+  }}
+  title="Statistics"
+>
+  📊
 </button>
 
     {/* THEME TOGGLE */}
@@ -272,7 +341,6 @@ function App() {
 
         <button
           onClick={() => {
-            setHasWon(true);
             setShowWinModal(true);
           }}
           style={{ marginTop: 8 }}
@@ -315,13 +383,14 @@ function App() {
                   }}
                 >
                   <div
-                    onMouseEnter={(e) => {
-                      setHoveredWord(s.word);
-                      setHoveredEl(e.currentTarget);
-                    }}
-                    onMouseLeave={() => {
-                      setHoveredWord(null);
-                      setHoveredEl(null);
+                    onClick={(e) => {
+                      if (hoveredWord === s.word) {
+                        setHoveredWord(null);
+                        setHoveredEl(null);
+                      } else {
+                        setHoveredWord(s.word);
+                        setHoveredEl(e.currentTarget);
+                      }
                     }}
                     style={{ position: "relative" }}
                   >
@@ -418,74 +487,148 @@ function App() {
               🔄 New Game
             </button>
             
+            <div className="stats-panel">
+              <div>
+                <b>Played</b>
+                <div>{stats.gamesPlayed}</div>
+              </div>
+              <div>
+                <b>Win %</b>
+                <div>{stats.gamesPlayed ? Math.round((stats.wins / stats.gamesPlayed) * 100) : 0}</div>
+              </div>
+              <div>
+                <b>Streak</b>
+                <div>{stats.currentStreak}</div>
+              </div>
+              <div>
+                <b>Max</b>
+                <div>{stats.maxStreak}</div>
+              </div>
+            </div>
+            <p className="next-countdown">
+              Next puzzle in <b>{formatTime(secondsLeft)}</b>
+            </p>
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
     <AnimatePresence>
-  {showGuide && (
-    <motion.div
-      className="modal-backdrop"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <motion.div
-        className="modal"
-        initial={{ scale: 0.85, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9 }}
-      >
-        <button
-          style={{
-            position: "absolute",
-            top: 12,
-            right: 12,
-            fontSize: 18,
-            background: "transparent",
-          }}
-          onClick={() => setShowGuide(false)}
+      {showStats && (
+        <motion.div
+          className="modal-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
         >
-          ✕
-        </button>
-
-        <h2>How To Use WordleX</h2>
-
-        <p>
-          WordleX is a solver that helps you crack the Wordle
-          using information theory.
-        </p>
-
-        <ul style={{ textAlign: "left" }}>
-          <li>Type guesses using your keyboard or click keys.</li>
-          <li>Press Enter to submit a word.</li>
-          <li>Click tiles to cycle colors.</li>
-          <li>Gray = not in word.</li>
-          <li>Yellow = wrong position.</li>
-          <li>Green = correct.</li>
-          <li>Click <b>Confirm Feedback</b> to run the solver.</li>
-          <li>Hover suggestions to see entropy details.</li>
-        </ul>
-
-        <p>
-          🎉 If all letters are green — you win!
-        </p>
-
-        <button
-  style={{ marginTop: 14 }}
-  onClick={() => {
-    localStorage.setItem("seen-guide", "1");
-    setShowGuide(false);
-  }}
->
-  Got it!
-</button>
-
-      </motion.div>
-    </motion.div>
-  )}
-</AnimatePresence>
-
+          <motion.div
+            className="modal"
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0.8 }}
+          >
+            <button
+              style={{
+                position: "absolute",
+                top: 12,
+                right: 12,
+                background: "transparent",
+                fontSize: 18,
+              }}
+              onClick={() => setShowStats(false)}
+            >
+              ✕
+            </button>
+            <h2>📊 Statistics</h2>
+            <div className="stats-panel">
+              <div>
+                <b>Played</b>
+                <div>{stats.gamesPlayed}</div>
+              </div>
+              <div>
+                <b>Win %</b>
+                <div>
+                  {stats.gamesPlayed
+                    ? Math.round((stats.wins / stats.gamesPlayed) * 100)
+                    : 0}
+                </div>
+              </div>
+              <div>
+                <b>Current</b>
+                <div>{stats.currentStreak}</div>
+              </div>
+              <div>
+                <b>Max</b>
+                <div>{stats.maxStreak}</div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    <AnimatePresence>
+      {showGuide && (
+        <motion.div
+          className="modal-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            className="modal"
+            initial={{ scale: 0.85, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.9 }}
+          >
+            <h2>How to Use WordleX</h2>
+            <p>
+              WordleX is an intelligent Wordle assistant powered by information theory.
+              Enter your guesses and feedback, and the solver will recommend the most
+              informative next moves.
+            </p>
+            <ul className="guide-list">
+              <li>
+                <b>Enter a Guess</b> — Type using your keyboard or tap the on-screen keys.
+              </li>
+              <li>
+                <b>Submit</b> — Press <kbd>Enter</kbd> to lock the word into the grid.
+              </li>
+              <li>
+                <b>Set Feedback</b> — Click each tile to cycle through colors:
+                <span className="legend gray">Gray</span> not in word,
+                <span className="legend yellow">Yellow</span> wrong position,
+                <span className="legend green">Green</span> correct.
+              </li>
+              <li>
+                <b>Confirm Feedback</b> — Run the solver and narrow down remaining answers.
+              </li>
+              <li>
+                <b>View Suggestions</b> — See the top-ranked words and expected information
+                gain on the right panel.
+              </li>
+              <li>
+                <b>Entropy Tooltips</b> — Hover a suggestion to view partition breakdowns
+                and how the score is calculated.
+              </li>
+              <li>
+                <b>Daily Puzzle</b> — Solve in six tries or mark the puzzle complete once
+                all tiles turn green.
+              </li>
+            </ul>
+            <p>
+              Good luck — and may entropy be on your side. 🙂
+            </p>
+            <button
+              onClick={() => {
+                localStorage.setItem("seen-guide", "1");
+                setShowGuide(false);
+              }}
+            >
+              Got it!
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   </div>
 );
 

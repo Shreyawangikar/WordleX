@@ -47,8 +47,9 @@ body:not(.dark) .suggestion-word {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 32px;
-  max-width: 1000px;
+  max-width: 1100px;
   width: 100%;
+  align-items: start;
 }
 
 .left-panel {
@@ -308,6 +309,13 @@ body.dark button {
   animation: pop 0.4s ease;
 }
 
+.next-countdown {
+  text-align: center;
+  font-size: 15px;
+  margin: 10px 0 0 0;
+  opacity: 0.85;
+}
+
 @keyframes pop {
   0% {
     transform: scale(1.2);
@@ -397,4 +405,148 @@ h1 {
 
 body.dark .t-gray {
   color: #6b7280;
+}
+
+.stats-panel {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.stats-panel div {
+  text-align: center;
+  font-size: 14px;
+}
+
+.stats-panel b {
+  display: block;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.header-bar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.countdown {
+  font-size: 13px;
+  opacity: 0.75;
+  font-weight: 600;
+}
+
+.stats-button {
+  position: fixed;
+  top: 16px;
+  right: 130px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #222;
+  background: transparent;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+body.dark .stats-button {
+  border-color: #444;
+  color: white;
+}
+.guess-dist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.dist-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.dist-row .bar {
+  background: #6aaa64;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 6px;
+  min-width: 22px;
+  transition: width 0.4s ease;
+}
+
+.guide-list {
+  text-align: left;
+  padding-left: 18px;
+  line-height: 1.6;
+}
+.guide-list li {
+  margin-bottom: 10px;
+}
+.legend {
+  display: inline-block;
+  margin: 0 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.legend.gray {
+  background: #787c7e;
+  color: white;
+}
+.legend.yellow {
+  background: #c9b458;
+  color: white;
+}
+.legend.green {
+  background: #6aaa64;
+  color: white;
+}
+
+/* MOBILE STACK */
+@media (max-width: 900px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .right-panel {
+    order: 3;
+  }
+  .left-panel {
+    order: 2;
+  }
+}
+
+@media (max-width: 520px) {
+  .grid {
+    transform: scale(0.9);
+  }
+}
+@media (max-width: 380px) {
+  .grid {
+    transform: scale(0.82);
+  }
+}
+.key {
+  min-height: 48px;
+  font-size: 16px;
+}
+@media (max-width: 500px) {
+  .key {
+    min-height: 54px;
+    font-size: 18px;
+  }
+}
+.header-bar {
+  padding-top: env(safe-area-inset-top);
+}
+.modal {
+  max-width: 92vw;
+  padding: 22px;
+}
+body {
+  overscroll-behavior: contain;
 }
