@@ -1,0 +1,2 @@
+# WordleX
+solving wordle
